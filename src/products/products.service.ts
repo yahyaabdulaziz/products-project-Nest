@@ -8,11 +8,20 @@ import { Product } from './entities/product.entity';
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectRepository(Product) private readonly product: Repository<Product>,
+    @InjectRepository(Product)
+    private readonly product: Repository<Product>,
   ) {}
 
-  async createProduct(createProductDto: CreateProductDto): Promise<Product> {
-    const product = await this.product.create(createProductDto);
+  async createProduct(
+    createProductDto: CreateProductDto,
+    photo?: Express.Multer.File,
+  ): Promise<Product> {
+    const baseUrl = 'http://localhost:3000';
+    const product = this.product.create({
+      ...createProductDto,
+      photoUrl: photo ? `${baseUrl}/uploads/products/${photo.filename}` : null,
+    });
+
     return this.product.save(product);
   }
 
@@ -33,7 +42,10 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
+  async update(
+    id: string,
+    updateProductDto: UpdateProductDto,
+  ): Promise<Product> {
     const product = await this.product.findOne({ where: { id } });
     if (!product) {
       throw new NotFoundException('Product not found');
